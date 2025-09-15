@@ -873,16 +873,13 @@ static int seek(struct action_event *event)
 	}
 
 	const char *unit = upnp_get_string(event, "Unit");
-	if (strcmp(unit, "REL_TIME") == 0) {
-		// This is the only thing we support right now.
-		const char *target = upnp_get_string(event, "Target");
+	const char *target = upnp_get_string(event, "Target");
+
+	if (strcmp(unit, "REL_TIME") == 0 || strcmp(unit, "ABS_TIME") == 0) {
 		gint64 nanos = parse_upnp_time(target);
 		service_lock();
 		if (output_seek(nanos) == 0) {
-			// TODO(hzeller): Seeking might take some time,
-			// pretend to already be there. Should we go into
-			// TRANSITION mode ?
-			// (gstreamer will go into PAUSE, then PLAYING)
+			// For both REL_TIME and ABS_TIME, update the position variable.
 			replace_var(TRANSPORT_VAR_REL_TIME_POS, target);
 		}
 		service_unlock();
